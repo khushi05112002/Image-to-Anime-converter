@@ -6,20 +6,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ImageUploadZone from "@/components/ImageUploadZone";
 import ImageComparison from "@/components/ImageComparison";
+import { compressImage } from "@/utils/imageCompression";
 
 const Index = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [animeImage, setAnimeImage] = useState<string | null>(null);
   const [isConverting, setIsConverting] = useState(false);
 
-  const handleImageUpload = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setOriginalImage(result);
-      setAnimeImage(null); // Reset anime image when new image is uploaded
-    };
-    reader.readAsDataURL(file);
+  const handleImageUpload = useCallback(async (file: File) => {
+    try {
+      // Compress image before displaying
+      const compressedImage = await compressImage(file, 800);
+      setOriginalImage(compressedImage);
+      setAnimeImage(null);
+    } catch (error) {
+      console.error('Compression error:', error);
+      toast.error("Failed to process image");
+    }
   }, []);
 
   const convertToAnime = async () => {
